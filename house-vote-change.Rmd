@@ -46,8 +46,9 @@ house_precincts_2016 %>%
                            party %~% '^r' ~ 'R',
                            TRUE ~ 'O')) %>% 
   group_by(state, district, candidate, party) %>% 
-  summarize(candidate_votes = sum(votes)) %>% 
-  View()
+  summarize(candidate_votes = sum(votes)) ->
+  house_district_2016
+
 
 ```
 

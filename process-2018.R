@@ -23,18 +23,19 @@ library(dplyr)
 read.csv('../2018-elections/raw-returns/Indiana.csv',
          stringsAsFactors = FALSE) %>% 
   filter(Office.Category == 'US Representative') %>% 
-  mutate(house_district = paste0('IN-', Jurisdiction.Name),
+  mutate(state = 'Indiana',
          party = case_when(Political.Party %~% '^D' ~ 'D',
                            Political.Party %~% '^R' ~ 'R',
                            TRUE ~ 'O')
          ) %>% 
-  select(house_district,
+  select(state,
+         district = Jurisdiction.Name,
          county_name = Reporting.County.Name,
          candidate = Name.on.Ballot,
          party,
          county_votes = Total.Votes
          ) %>% 
-  group_by(house_district, candidate, party) %>% 
+  group_by(state, district, candidate, party) %>% 
   summarize(candidate_votes = sum(county_votes, na.rm = TRUE)) ->
   indiana_results
 
@@ -60,7 +61,7 @@ read.table(url('https://electionresults.sos.state.mn.us/Results/MediaResult/115?
     #Office Name 
     office_name = V5,
     #District*
-    district_num = V6,
+    district = V6,
     #Candidate Order Code
     candidate_order = V7,
     #Candidate Name (First/Last/Suffix all in one field)
@@ -77,11 +78,12 @@ read.table(url('https://electionresults.sos.state.mn.us/Results/MediaResult/115?
     #Total number of votes for Office in area
   ) %>% 
   filter(office_name %~% 'U.S. Representative') %>% 
-  mutate(district = paste0(state, '-', district_num),
+  mutate(state = 'Minnesota',
+         district = as.character(district),
          party = case_when(party_abbrev %~% '^D' ~ 'D',
                            party_abbrev %~% '^R' ~ 'R',
                            TRUE ~ 'Other')) %>% 
-  group_by(district, candidate, party) %>% 
+  group_by(state, district, candidate, party) %>% 
   summarize(candidate_votes = sum(vote_subtotal)) ->
   minnesota_results
 
@@ -102,8 +104,8 @@ read.table(url('https://electionresults.sos.state.mn.us/Results/MediaResult/115?
 read.csv('../2018-elections/raw-returns/Pennsylvania.CSV',
          stringsAsFactors = FALSE) %>% 
   filter(Office.Name == 'Representative in Congress') %>% 
-  mutate(district_num = stringr::str_extract(District.Name, '^\\d{1,2}'),
-         district = paste0('PA-', district_num),
+  mutate(state = 'Pennsylvania',
+         district = stringr::str_extract(District.Name, '^\\d{1,2}'),
          candidate_last = stringr::str_replace(
            string = Candidate.Name,
            pattern = ',.*$',
@@ -124,7 +126,7 @@ read.csv('../2018-elections/raw-returns/Pennsylvania.CSV',
                            TRUE ~ 'O'),
          votes = readr::parse_number(Votes)
          ) %>% 
-  group_by(district, candidate, party) %>% 
+  group_by(state, district, candidate, party) %>% 
   summarize(candidate_votes = sum(votes)) ->
   pennsylvania_results
 
