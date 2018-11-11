@@ -15,20 +15,39 @@ Nate Silver started to address this question in an article on [November 8](https
 
 For each congressional district, how did the total votes for each party change? Were the relative changes in Democratic and Republician votes similar or were they different? For those districts where the shift wasn't proprotional, could we attribute it to Trump? Does the difference in vote proportion between Trump and the 2016 candidate correlate with the 2018 difference? Does Trump score?
 
-Election results where obtained from [MIT Elections Science and Data Lab](https://electionlab.mit.edu/). The 2016 results are in their [`elections` R package](https://github.com/MEDSL/elections)[^1], and 2018 from their [2018-elections Github repo](https://github.com/MEDSL/2018-elections). The 2018 results are in raw format, scrapped from elections website, and needed to be processed before analysis. This is documented in the [Github Repo](https://github.com/peterwsetter/votechange) for this project.
+Election results where obtained from [MIT Elections Science and Data Lab](https://electionlab.mit.edu/). The 2016 results are in their [`elections` R package](https://github.com/MEDSL/elections)[^1], and 2018 from their [2018-elections Github repo](https://github.com/MEDSL/2018-elections). The 2018 results are in raw format, scrapped from elections website, and needed to be processed before analysis. This is documented in the [Github Repo](https://github.com/peterwsetter/votechange/blob/master/process-2018.R) for this project. The [Trump Scores](https://projects.fivethirtyeight.com/congress-trump-score/house/) were [scrapped](https://github.com/peterwsetter/votechange/blob/master/get-data.R) from FiveThirtyEight.
 
 This analysis will start with Indiana, Minnesota, and Pennsylvania. As results are available, I will expand the analysis to Arizonia, Iowa, Florida, Michigan, New Hampshire, North Carolina, Ohio, Texas, and Wisconsin. 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 load('../elections/data/house_precincts_2016.rda')
 load('../elections/data/presidential_precincts_2016.rda')
+load('data/house_results_2018.rda')
+load('data/trump_scores_house.rda')
 ```
 
 ```{r}
-# Load packages and data 
+# Load packages
 library(dplyr)
+
+`%~%` <- function(lhs, rhs) grepl(rhs, lhs)
+```
+
+## Compare the Total Votes for Each Party
+
+```{r}
+house_precincts_2016 %>% 
+  filter(year == 2016,
+         stage == 'gen',
+         office == 'US House') %>% 
+  mutate(party = case_when(party %~% '^d' ~ 'D',
+                           party %~% '^r' ~ 'R',
+                           TRUE ~ 'O')) %>% 
+  group_by(state, district, candidate, party) %>% 
+  summarize(candidate_votes = sum(votes)) %>% 
+  View()
 
 ```
 
