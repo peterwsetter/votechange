@@ -3,8 +3,8 @@
 #' - Indiana.csv
 #' - Iowa.xls (File available but not possible to open with readxl)
 #' - Minnesota.txt (As of 2018-11-11, not up-to-date)
-#' - Michigan.xls
-#' - North_Carolina.xlsx
+#' - Michigan.xls (File available but not possible to open with readxl)
+#' - North_Carolina.xlsx (These are results for New Mexico)
 #' - Ohio.xlsx
 #' - Pennsylvania.CSV
 #' To add:
@@ -86,6 +86,53 @@ read.table(url('https://electionresults.sos.state.mn.us/Results/MediaResult/115?
   minnesota_results
 
 #' - Michigan.xls
+
 #' - North_Carolina.xlsx
+#readxl::read_excel('../2018-elections/raw-returns/North_Carolina.xlsx',
+#                   sheet = 3) %>% 
+#  View()
+
 #' - Ohio.xlsx
+#readxl::read_excel('../2018-elections/raw-returns/Ohio.xlsx',
+#                   sheet = 'U.S. Congress',
+#                   skip = 1) %>% 
+#  View()
+
 #' - Pennsylvania.CSV
+read.csv('../2018-elections/raw-returns/Pennsylvania.CSV',
+         stringsAsFactors = FALSE) %>% 
+  filter(Office.Name == 'Representative in Congress') %>% 
+  mutate(district_num = stringr::str_extract(District.Name, '^\\d{1,2}'),
+         district = paste0('PA-', district_num),
+         candidate_last = stringr::str_replace(
+           string = Candidate.Name,
+           pattern = ',.*$',
+           replacement = ''
+         ),
+         candidate_firstmiddle = stringr::str_replace(
+           string = Candidate.Name,
+           pattern = '^.*,',
+           replacement = ''
+         ),
+         candidate = paste(candidate_firstmiddle, candidate_last) %>% 
+           stringr::str_replace(
+             pattern = 'JR',
+             replacement = ''
+           ),
+         party = case_when(Party.Name %~% '^D' ~ 'D',
+                           Party.Name %~% '^R' ~ 'R',
+                           TRUE ~ 'O'),
+         votes = readr::parse_number(Votes)
+         ) %>% 
+  group_by(district, candidate, party) %>% 
+  summarize(candidate_votes = sum(votes)) ->
+  pennsylvania_results
+
+bind_rows(
+  indiana_results,
+  minnesota_results,
+  pennsylvania_results
+) ->
+  house_results_2018
+
+save(house_results_2018, file = 'data/house_results_2018.rda')
