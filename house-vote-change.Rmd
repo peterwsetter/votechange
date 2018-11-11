@@ -24,8 +24,10 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 load('../elections/data/house_precincts_2016.rda')
 load('../elections/data/presidential_precincts_2016.rda')
-load('data/house_results_2018.rda')
+load('data/house_district_2018.rda')
 load('data/trump_scores_house.rda')
+
+CURRENT_STATES <- c('Minnesota', 'Indiana', 'Pennsylvania')
 ```
 
 ```{r}
@@ -37,21 +39,47 @@ library(dplyr)
 
 ## Compare the Total Votes for Each Party
 
-```{r}
+```{r house_district_2018}
 house_precincts_2016 %>% 
   filter(year == 2016,
-         stage == 'gen',
          office == 'US House') %>% 
-  mutate(party = case_when(party %~% '^d' ~ 'D',
-                           party %~% '^r' ~ 'R',
+  mutate(party = case_when(party %~% '^[D,d]' ~ 'D',
+                           party %~% '^[R,r]' ~ 'R',
                            TRUE ~ 'O')) %>% 
-  group_by(state, district, candidate, party) %>% 
+  group_by(year, state, district, candidate, party) %>% 
   summarize(candidate_votes = sum(votes)) ->
   house_district_2016
 
 
 ```
 
+```{r house_votechange}
+house_district_2016 %>% 
+  # Just include states 
+  filter(state %in% CURRENT_STATES) %>% 
+  bind_rows(house_district_2018) ->
+  house_district
+
+house_district %>% 
+  group_by(state, party, year) %>% 
+  summarize(party_votes = sum(candidate_votes)) %>% 
+  group_by(state, party) %>% 
+  filter(n() == 2) %>% 
+  arrange(year, .by_group = TRUE) %>% 
+  summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2))
+  
+```
+
+```{r}
+house_district %>% 
+  group_by(state, district, party, year) %>% 
+  summarize(party_votes = sum(candidate_votes)) %>% 
+  group_by(state, district, party) %>% 
+  filter(n() == 2) %>% 
+  arrange(year, .by_group = TRUE) %>% 
+  summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) %>% 
+  View()
+```
 
 
 [^1:] I had difficulty installing `elections` on my AWS Ubuntu server. The repo itself contains the data as `.rds` files, so `git clone`ing locally was a quick workaround.

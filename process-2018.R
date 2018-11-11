@@ -134,7 +134,8 @@ bind_rows(
   indiana_results,
   minnesota_results,
   pennsylvania_results
-) ->
-  house_results_2018
+) %>% 
+  mutate(year = 2018) ->
+  house_district_2018
 
-save(house_results_2018, file = 'data/house_results_2018.rda')
+save(house_district_2018, file = 'data/house_district_2018.rda')
