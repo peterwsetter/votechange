@@ -39,19 +39,26 @@ library(dplyr)
 
 ## Compare the Total Votes for Each Party
 
+The 2016 House results from `election` are listed by predincts. This data was aggregated for candidate totals in the district. One flaw in this dataset is that Minnesota's Democractic-Farm-Labor party isn't labeled as "democratic". Before summarizing, party labels will be adjusted to include the DFL. 
+
 ```{r house_district_2018}
 house_precincts_2016 %>% 
   filter(year == 2016,
          office == 'US House') %>% 
+  # Standardize party labels
   mutate(party = case_when(party %~% '^[D,d]' ~ 'D',
                            party %~% '^[R,r]' ~ 'R',
-                           TRUE ~ 'O')) %>% 
+                           TRUE ~ 'O'),
+         candidate = candidate_normalized
+         ) %>% 
   group_by(year, state, district, candidate, party) %>% 
   summarize(candidate_votes = sum(votes)) ->
   house_district_2016
 
 
 ```
+
+After a union of the 2016 and 2018 results, the votes are aggregated at the state level. To compare the number of votes cast, I calculated the proportion of votes cast for each party in 2018 compared to 2016.
 
 ```{r house_votechange}
 house_district_2016 %>% 
@@ -66,9 +73,10 @@ house_district %>%
   group_by(state, party) %>% 
   filter(n() == 2) %>% 
   arrange(year, .by_group = TRUE) %>% 
-  summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2))
-  
+  summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) 
 ```
+
+Compared to 2016, there was approximately 20% fewer votes cast in Indiana for candidates of either major party. This is in sharp contrast to Minnesota and Pennsylvania, where Democratic candidates received approximately the **same** number of total votes while there was a sharp decline in votes cast for Republican candidates. 
 
 ```{r}
 house_district %>% 

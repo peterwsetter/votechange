@@ -27,7 +27,7 @@ read.csv('../2018-elections/raw-returns/Indiana.csv',
          party = case_when(Political.Party %~% '^D' ~ 'D',
                            Political.Party %~% '^R' ~ 'R',
                            TRUE ~ 'O')
-         ) %>% 
+         ) %>%
   select(state,
          district = Jurisdiction.Name,
          county_name = Reporting.County.Name,
