@@ -40,7 +40,7 @@ read.csv('../2018-elections/raw-returns/Indiana.csv',
   indiana_results
 
 #' - Iowa.xls
-#readxl::read_xlsx('../2018-elections/raw-returns/Iowa.xls') %>% 
+#readxl::read_excel('../2018-elections/raw-returns/Iowa.xls') %>% 
 #  View()
 
 #' - Minnesota.txt
