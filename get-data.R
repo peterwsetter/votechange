@@ -44,7 +44,8 @@ colnames(trump_scores_house) <- c(
 
 trump_scores_house %>% 
   mutate(trump_score = readr::parse_number(trump_score)) %>% 
-  select(member, member_last, district, trump_score) ->
+  select(member, member_last, district, 
+         trump_score, trump_margin, trump_plus_minus) ->
   trump_scores_house
 
 save(trump_scores_house, file = 'data/trump_scores_house.rda')

@@ -23,7 +23,7 @@ This analysis will start with Indiana, Minnesota, and Pennsylvania. As results a
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 load('../elections/data/house_precincts_2016.rda')
-load('../elections/data/presidential_precincts_2016.rda')
+#load('../elections/data/presidential_precincts_2016.rda')
 load('data/house_district_2018.rda')
 load('data/trump_scores_house.rda')
 
@@ -34,6 +34,7 @@ CURRENT_STATES <- c('Minnesota', 'Indiana', 'Pennsylvania')
 # Load packages
 library(dplyr)
 library(ggplot2)
+library(tidyr)
 
 `%~%` <- function(lhs, rhs) grepl(rhs, lhs)
 
@@ -121,7 +122,7 @@ house_district %>%
   summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) ->
   district_votechange
 
-distric_votechange %>% 
+district_votechange %>% 
   filter(party != 'O',
          state != 'Pennsylvania') %>% 
   mutate(label_text = paste0(round(votechange_prop*100), '%')) %>% 
@@ -131,7 +132,39 @@ distric_votechange %>%
   facet_wrap(~state, ncol = 1, scales = 'free_y') +
   labs(title = 'Change in Votes Cast for House Candidates:\n2018 Relative to 2016',
        y = 'Percent Change',
-       x = NULL)
+       x = NULL) 
+```
+
+Summarizing by state:
+
+```{r}
+district_votechange %>% 
+  filter(party != 'O',
+         state != 'Pennsylvania') %>% 
+  group_by(state_district) %>% 
+  filter(n() == 2) %>% 
+  inner_join(trump_scores_house,
+             by = c('state_district' = 'district')) ->
+  vc_ts
+```
+
+```{r}
+vc_ts %>% 
+  ggplot(aes(trump_plus_minus, votechange_prop, #color = party,
+             text = state_district)) +
+  geom_point() +
+  theme_classic() +
+  #scale_color_manual(values = c('#0015BC', '#FF0000'),
+  #                  name = 'Party') +
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(~party, ncol = 1) +
+  labs(lab = 'Change in House Votes Cast vs 538 Trump +/-',
+       x = 'Trump +/-',
+       y = 'Change in House Votes Cast') ->
+  p
+
+plotly::ggplotly(p, tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
+  
 ```
 
 
