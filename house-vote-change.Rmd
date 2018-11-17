@@ -33,8 +33,25 @@ CURRENT_STATES <- c('Minnesota', 'Indiana', 'Pennsylvania')
 ```{r}
 # Load packages
 library(dplyr)
+library(ggplot2)
 
 `%~%` <- function(lhs, rhs) grepl(rhs, lhs)
+
+votechange_chart <- list(
+  geom_col(position = 'dodge'),
+  geom_text(aes(label = label_text,
+                hjust = 1),
+            #source: https://stackoverflow.com/a/40250493
+            position = position_dodge(width = .9),
+            color = 'white'
+            ),
+  scale_fill_manual(values = c('#0015BC', '#FF0000'),
+                    name = 'Party'),
+  theme_classic(),
+  theme(legend.position = 'bottom'),
+  scale_y_continuous(labels = scales::percent_format()),
+  coord_flip()
+)
 ```
 
 ## Compare the Total Votes for Each Party
@@ -61,10 +78,18 @@ house_precincts_2016 %>%
 After a union of the 2016 and 2018 results, the votes are aggregated at the state level. To compare the number of votes cast, I calculated the proportion of votes cast for each party in 2018 compared to 2016.
 
 ```{r house_votechange}
+state_abbrevs <- data_frame(
+  state = state.name,
+  state_abbrev = state.abb
+)
+
 house_district_2016 %>% 
   # Just include states 
   filter(state %in% CURRENT_STATES) %>% 
-  bind_rows(house_district_2018) ->
+  bind_rows(house_district_2018) %>% 
+  inner_join(state_abbrevs,
+             by = c('state' = 'state')) %>% 
+  mutate(state_district = paste0(state_abbrev,'-', district)) ->
   house_district
 
 house_district %>% 
@@ -73,20 +98,40 @@ house_district %>%
   group_by(state, party) %>% 
   filter(n() == 2) %>% 
   arrange(year, .by_group = TRUE) %>% 
-  summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) 
+  summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) %>% 
+  filter(party != 'O') %>% 
+  mutate(label_text = paste0(round(votechange_prop*100), '%')) %>% 
+  ggplot(aes(state, votechange_prop, 
+             fill = party)) +
+  votechange_chart +
+  labs(title = 'Change in Votes Cast for House Candidates:\n2018 Relative to 2016',
+       y = 'Percent Change',
+       x = NULL)
 ```
 
 Compared to 2016, there was approximately 20% fewer votes cast in Indiana for candidates of either major party. This is in sharp contrast to Minnesota and Pennsylvania, where Democratic candidates received approximately the **same** number of total votes while there was a sharp decline in votes cast for Republican candidates. 
 
 ```{r}
 house_district %>% 
-  group_by(state, district, party, year) %>% 
+  group_by(state, state_district, party, year) %>% 
   summarize(party_votes = sum(candidate_votes)) %>% 
-  group_by(state, district, party) %>% 
+  group_by(state, state_district, party) %>% 
   filter(n() == 2) %>% 
   arrange(year, .by_group = TRUE) %>% 
-  summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) %>% 
-  View()
+  summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) ->
+  district_votechange
+
+distric_votechange %>% 
+  filter(party != 'O',
+         state != 'Pennsylvania') %>% 
+  mutate(label_text = paste0(round(votechange_prop*100), '%')) %>% 
+  ggplot(aes(state_district, votechange_prop, 
+             fill = party)) +
+  votechange_chart +
+  facet_wrap(~state, ncol = 1, scales = 'free_y') +
+  labs(title = 'Change in Votes Cast for House Candidates:\n2018 Relative to 2016',
+       y = 'Percent Change',
+       x = NULL)
 ```
 
 
