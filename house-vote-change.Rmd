@@ -137,7 +137,7 @@ district_votechange %>%
 
 Summarizing by state:
 
-```{r}
+```{r votechange_trumpscore}
 district_votechange %>% 
   filter(party != 'O',
          state != 'Pennsylvania') %>% 
@@ -148,22 +148,34 @@ district_votechange %>%
   vc_ts
 ```
 
-```{r}
+```{r vc_ts_graphs}
 vc_ts %>% 
-  ggplot(aes(trump_plus_minus, votechange_prop, #color = party,
-             text = state_district)) +
+  group_by(state_district, trump_plus_minus) %>% 
+  summarize(upper = max(votechange_prop),
+            lower = min(votechange_prop)) %>% 
+  mutate(party = 'R') %>% 
+  select(-trump_plus_minus) ->
+  diff_line
+
+vc_ts %>% 
+  left_join(diff_line,
+            by = c('state_district' = 'state_district',
+                  'party' = 'party'))  %>% 
+  ggplot(aes(trump_plus_minus, votechange_prop, color = party,
+             text = state_district), inherit.aes = FALSE) +
   geom_point() +
-  theme_classic() +
-  #scale_color_manual(values = c('#0015BC', '#FF0000'),
-  #                  name = 'Party') +
+  scale_color_manual(values = c('#0015BC', '#FF0000'),
+                    name = 'Party') +
+  geom_linerange(aes(ymin = lower, ymax = upper), color = 'gray') +
   scale_y_continuous(labels = scales::percent_format()) +
-  facet_wrap(~party, ncol = 1) +
+  theme_classic() +
   labs(lab = 'Change in House Votes Cast vs 538 Trump +/-',
        x = 'Trump +/-',
        y = 'Change in House Votes Cast') ->
-  p
-
-plotly::ggplotly(p, tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
+    votechange_trumpscore_graph
+  
+plotly::ggplotly(votechange_trumpscore_graph, 
+                 tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
   
 ```
 
