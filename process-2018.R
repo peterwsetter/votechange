@@ -1,18 +1,9 @@
 #' Process and merge 2018 election results
 #' Input:
 #' - Indiana.csv
-#' - Iowa.xls (File available but not possible to open with readxl)
 #' - Minnesota.txt (As of 2018-11-11, not up-to-date)
-#' - Michigan.xls (File available but not possible to open with readxl)
-#' - North_Carolina.xlsx (These are results for New Mexico)
-#' - Ohio.xlsx
 #' - Pennsylvania.CSV
-#' To add:
-#' - Arizona
-#' - Florida
-#' - New Hampshire
-#' - Texas
-#' - Wisconsin
+#' - house-elections-2018.csv
 #' Output: state_results_2018.rds
 
 library(dplyr)
@@ -38,10 +29,6 @@ read.csv('../2018-elections/raw-returns/Indiana.csv',
   group_by(state, district, candidate, party) %>% 
   summarize(candidate_votes = sum(county_votes, na.rm = TRUE)) ->
   indiana_results
-
-#' - Iowa.xls
-#readxl::read_excel('../2018-elections/raw-returns/Iowa.xls') %>% 
-#  View()
 
 #' - Minnesota.txt
 #' Getting data directly from Minnesota website
@@ -87,19 +74,6 @@ read.table(url('https://electionresults.sos.state.mn.us/Results/MediaResult/115?
   summarize(candidate_votes = sum(vote_subtotal)) ->
   minnesota_results
 
-#' - Michigan.xls
-
-#' - North_Carolina.xlsx
-#readxl::read_excel('../2018-elections/raw-returns/North_Carolina.xlsx',
-#                   sheet = 3) %>% 
-#  View()
-
-#' - Ohio.xlsx
-#readxl::read_excel('../2018-elections/raw-returns/Ohio.xlsx',
-#                   sheet = 'U.S. Congress',
-#                   skip = 1) %>% 
-#  View()
-
 #' - Pennsylvania.CSV
 read.csv('../2018-elections/raw-returns/Pennsylvania.CSV',
          stringsAsFactors = FALSE) %>% 
@@ -130,10 +104,22 @@ read.csv('../2018-elections/raw-returns/Pennsylvania.CSV',
   summarize(candidate_votes = sum(votes)) ->
   pennsylvania_results
 
+# Other results
+read.csv('data/house-elections-2018.csv',
+         stringsAsFactors = FALSE) %>% 
+  mutate(party = case_when(party %~% '^D' ~ 'D',
+                           party %~% '^R' ~ 'R',
+                          TRUE ~ 'O'),
+         district = as.character(district)) %>% 
+  filter(!is.na(votes)) %>% 
+  select(state, district, candidate, party, candidate_votes = votes) ->
+  other_results
+
 bind_rows(
   indiana_results,
   minnesota_results,
-  pennsylvania_results
+  pennsylvania_results,
+  other_results
 ) %>% 
   mutate(year = 2018) ->
   house_district_2018
