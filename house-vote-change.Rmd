@@ -41,6 +41,7 @@ EXCLUDE_DISTRICTS <- c('WI-3', 'TX-34')
 library(dplyr)
 library(ggplot2)
 library(tidyr)
+library(slickR)
 
 `%~%` <- function(lhs, rhs) grepl(rhs, lhs)
 
@@ -134,17 +135,32 @@ house_district %>%
   summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) ->
   district_votechange
 
-district_votechange %>% 
+district_votechange %>%
   filter(party != 'O',
-         state != 'Pennsylvania') %>% 
+         state != 'Pennsylvania',
+         state_district %!in% EXCLUDE_DISTRICTS) %>% 
+  group_by(state_district) %>% 
+  filter(n() == 2) %>% 
   mutate(label_text = paste0(round(votechange_prop*100), '%')) %>% 
-  ggplot(aes(state_district, votechange_prop, 
-             fill = party)) +
-  votechange_chart +
-  facet_wrap(~state, ncol = 1, scales = 'free_y') +
-  labs(title = 'Change in Votes Cast for House Candidates:\n2018 Relative to 2016',
-       y = 'Percent of 2016 House Votes Cast for Party',
-       x = NULL) 
+  group_by(state) %>% 
+  nest() %>% 
+  mutate(graphs = purrr::map2(state, data,
+                              ~ggplot(.y, aes(state_district,
+                                              votechange_prop, 
+                                             fill = party)) +
+                                votechange_chart +
+                                labs(title = .x,
+                                     x = NULL,
+                                     y = 'Percent of 2016 House Votes Cast for Party')
+                                      ) 
+                   ) %>% 
+  pull(graphs) %>% 
+  purrr::map(function(x) svglite::xmlSVG(show(x), standalone = TRUE)) %>% 
+  sapply(function(sv) paste0('data:image/svg+xml;utf8,', as.character(sv))) ->
+  state_votechange_plots
+
+#slickR::slickR(state_votechange_plots)
+
 ```
 
 Summarizing by state:
