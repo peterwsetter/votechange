@@ -27,7 +27,13 @@ load('../elections/data/presidential_precincts_2016.rda')
 load('data/house_district_2018.rda')
 load('data/trump_scores_house.rda')
 
-CURRENT_STATES <- c('Minnesota', 'Indiana', 'Pennsylvania')
+CURRENT_STATES <- c('Minnesota', 'Indiana', 'Pennsylvania',
+                    'Iowa', 'Michigan', 'North Carolina',
+                    'Ohio', 'Arizona',
+                    'Florida', 'Texas', 'Virginia',
+                    'New Hampshire', 'Wisconsin')
+
+EXCLUDE_DISTRICTS <- c('WI-3', 'TX-34')
 ```
 
 ```{r}
@@ -37,6 +43,9 @@ library(ggplot2)
 library(tidyr)
 
 `%~%` <- function(lhs, rhs) grepl(rhs, lhs)
+
+`%!in%` <- function(x,y)!(`%in%`(x,y))
+
 
 votechange_chart <- list(
   geom_col(position = 'dodge'),
@@ -146,6 +155,7 @@ district_votechange %>%
          state != 'Pennsylvania') %>% 
   group_by(state_district) %>% 
   filter(n() == 2) %>% 
+  filter(state_district %!in% EXCLUDE_DISTRICTS) %>% 
   inner_join(trump_scores_house,
              by = c('state_district' = 'district')) ->
   vc_ts
@@ -166,10 +176,11 @@ vc_ts %>%
                   'party' = 'party'))  %>% 
   ggplot(aes(trump_plus_minus, votechange_prop, color = party,
              text = state_district), inherit.aes = FALSE) +
+  geom_linerange(aes(ymin = lower, ymax = upper), 
+                 color = 'gray', alpha = 0.5) +
   geom_point() +
   scale_color_manual(values = c('#0015BC', '#FF0000'),
                     name = 'Party') +
-  geom_linerange(aes(ymin = lower, ymax = upper), color = 'gray') +
   scale_y_continuous(labels = scales::percent_format()) +
   theme_classic() +
   labs(lab = 'Change in House Votes Cast vs 538 Trump +/-',

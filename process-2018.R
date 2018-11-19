@@ -105,6 +105,7 @@ read.csv('../2018-elections/raw-returns/Pennsylvania.CSV',
   pennsylvania_results
 
 # Other results
+# Data collected from Open Secrets and CNN
 read.csv('data/house-elections-2018.csv',
          stringsAsFactors = FALSE) %>% 
   mutate(party = case_when(party %~% '^D' ~ 'D',
