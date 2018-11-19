@@ -120,7 +120,13 @@ house_district %>%
   votechange_chart +
   labs(title = 'Change in Votes Cast for House Candidates:\n2018 Relative to 2016',
        y = 'Percent of 2016 House Votes Cast for Party',
-       x = NULL)
+       x = NULL) ->
+  votechange_state_graph
+
+save(votechange_state_graph,
+     file = 'data-products/votechange_state_graph.rda')
+
+votechange_state_graph
 ```
 
 Compared to 2016, there was approximately 20% fewer votes cast in Indiana for candidates of either major party. This is in sharp contrast to Minnesota and Pennsylvania, where Democratic candidates received approximately the **same** number of total votes while there was a sharp decline in votes cast for Republican candidates. 
@@ -157,7 +163,10 @@ district_votechange %>%
   pull(graphs) %>% 
   purrr::map(function(x) svglite::xmlSVG(show(x), standalone = TRUE)) %>% 
   sapply(function(sv) paste0('data:image/svg+xml;utf8,', as.character(sv))) ->
-  state_votechange_plots
+  state_votechange_slideshow
+
+save(state_votechange_slideshow, 
+     file = 'data-products/state_votechange_slideshow.rda')
 
 #slickR::slickR(state_votechange_plots)
 
@@ -203,9 +212,12 @@ vc_ts %>%
        x = 'Trump +/-',
        y = 'Change in House Votes Cast') ->
     votechange_trumpscore_graph
+
+save(votechange_trumpscore_graph,
+     file = 'data-products/votechange_trumpscore_graph.rda')
   
-plotly::ggplotly(votechange_trumpscore_graph, 
-                 tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
+#plotly::ggplotly(votechange_trumpscore_graph, 
+#                 tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
   
 ```
 
@@ -270,9 +282,12 @@ vc_ts %>%
        x = 'Percent Difference Between GOP House and Presidential Votes',
        y = 'Change in House Votes Cast') ->
     votechange_trumpdiff_graph
+
+save(votechange_trumpdiff_graph,
+     file = 'data-products/votechange_trumpdiff_graph.rda')
   
-plotly::ggplotly(votechange_trumpdiff_graph, 
-                 tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
+#plotly::ggplotly(votechange_trumpdiff_graph, 
+#                 tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
   
 ```
 
