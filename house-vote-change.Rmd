@@ -234,6 +234,8 @@ trump_district_2016 %>%
 
 ```{r}
 vc_ts %>% 
+  # Exclude Texas and Arizona because of error in election dataset
+  filter(state %!in% c('Texas', 'Arizona')) %>% 
   left_join(diff_line,
             by = c('state_district' = 'state_district',
                   'party' = 'party'))  %>% 
