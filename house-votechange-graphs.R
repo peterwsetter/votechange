@@ -117,10 +117,10 @@ save(votechange_state_graph,
 
 # Create slideshow with the change at the district level
 
-house_district %>% View()
-  group_by(state, state_district, party, year) %>% 
+house_district %>% 
+  group_by(state, district, state_district, party, year) %>% 
   summarize(party_votes = sum(candidate_votes)) %>% 
-  group_by(state, state_district, party) %>% 
+  group_by(state, district, state_district, party) %>% 
   filter(n() == 2) %>% 
   arrange(year, .by_group = TRUE) %>% 
   summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) ->
@@ -132,11 +132,12 @@ district_votechange %>%
          state_district %!in% EXCLUDE_DISTRICTS) %>% 
   group_by(state_district) %>% 
   filter(n() == 2) %>% 
-  mutate(label_text = paste0(round(votechange_prop*100), '%')) %>% 
+  mutate(label_text = paste0(round(votechange_prop*100), '%'),
+         district = as.integer(district)) %>% 
   group_by(state) %>% 
   nest() %>% 
   mutate(graphs = purrr::map2(state, data,
-                              ~ggplot(.y, aes(state_district,
+                              ~ggplot(.y, aes(factor(district),
                                               votechange_prop, 
                                               fill = party)) +
                                 votechange_chart +
@@ -154,3 +155,50 @@ save(state_votechange_slideshow,
      file = 'data-products/state_votechange_slideshow.rda')
 
 #slickR::slickR(state_votechange_slideshow)
+
+
+#####
+## Compare to Trump Score
+district_votechange %>% 
+  filter(party != 'O',
+         state != 'Pennsylvania') %>% 
+  group_by(state_district) %>% 
+  filter(n() == 2) %>% 
+  filter(state_district %!in% EXCLUDE_DISTRICTS) %>% 
+  inner_join(trump_scores_house,
+             by = c('state_district' = 'district')) ->
+  vc_ts
+
+# Lines for visualization
+vc_ts %>% 
+  group_by(state_district, trump_plus_minus) %>% 
+  summarize(upper = max(votechange_prop),
+            lower = min(votechange_prop)) %>% 
+  mutate(party = 'R') %>% 
+  select(-trump_plus_minus) ->
+  diff_line_ts
+
+# Create interactive graph
+vc_ts %>% 
+  left_join(diff_line_ts,
+            by = c('state_district' = 'state_district',
+                   'party' = 'party'))  %>% 
+  ggplot(aes(trump_plus_minus, votechange_prop, color = party,
+             text = state_district), inherit.aes = FALSE) +
+  geom_linerange(aes(ymin = lower, ymax = upper), 
+                 color = 'gray', alpha = 0.5) +
+  geom_point() +
+  scale_color_manual(values = c('#0015BC', '#FF0000'),
+                     name = 'Party') +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_classic() +
+  labs(lab = 'Change in House Votes Cast vs 538 Trump +/-',
+       x = 'Trump +/-',
+       y = 'Change in House Votes Cast') ->
+  votechange_trumpscore_graph
+
+save(votechange_trumpscore_graph,
+     file = 'data-products/votechange_trumpscore_graph.rda')
+
+#plotly::ggplotly(votechange_trumpscore_graph, tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
+
