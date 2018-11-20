@@ -235,3 +235,80 @@ vc_ts %>%
   trump_score_model
 
 save(trump_score_model, file = 'data-products/trump_score_model.rda')  
+
+#####
+## Compare Change in House Votes Cast to Difference 
+##   Between Republician House and Presidential in 2016
+
+house_precincts_2016 %>% 
+  filter(office == 'US House') %>% 
+  distinct(state_postal, district, county_name) ->
+  county_district_lookup
+
+presidential_precincts_2016 %>% 
+  filter(office == 'US President',
+         candidate_normalized == 'trump') %>% 
+  select(state_postal, county_name, votes) %>% 
+  left_join(county_district_lookup,
+            by = c('state_postal' = 'state_postal',
+                   'county_name' = 'county_name')) %>% 
+  mutate(state_district = paste0(state_postal, '-', district)) %>% 
+  group_by(state_district) %>% 
+  summarize(prez_votes = sum(votes)) ->
+  trump_district_2016
+
+house_district_2016 %>% 
+  filter(party == 'R') %>% 
+  inner_join(state_abbrevs,
+             by = c('state' = 'state')) %>% 
+  mutate(state_district = paste0(state_abbrev, '-', district)) %>% 
+  ungroup() %>% 
+  select(state_district, house_votes = candidate_votes) ->
+  gop_district_2016
+
+trump_district_2016 %>% 
+  inner_join(gop_district_2016,
+             by = c('state_district' = 'state_district')) %>%
+  mutate(prez_diff = (house_votes - prez_votes)/prez_votes) %>%
+  select(prez_diff, state_district) ->
+  house_trump_diff
+
+vc_ts %>% 
+  # Exclude Texas and Arizona because of error in election dataset
+  filter(state %!in% c('Texas', 'Arizona')) %>% 
+  left_join(diff_line,
+            by = c('state_district' = 'state_district',
+                   'party' = 'party'))  %>% 
+  left_join(house_trump_diff,
+            by = c('state_district' = 'state_district')) ->
+  votechange_trumpdiff
+
+votechange_trumpdiff %>% 
+  ggplot(aes(prez_diff, votechange_prop, color = party,
+             text = state_district), inherit.aes = FALSE) +
+  geom_point() +
+  scale_color_manual(values = c('#0015BC', '#FF0000'),
+                     name = 'Party') +
+  geom_linerange(aes(ymin = lower, ymax = upper), color = 'gray') +
+  scale_x_continuous(labels = scales::percent_format()) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_classic() +
+  labs(lab = 'Change in House Votes Cast vs Difference Between House and Presidential Votes',
+       x = 'Percent Difference Between GOP House and Presidential Votes',
+       y = 'Change in House Votes Cast') ->
+  votechange_trumpdiff_graph
+
+save(votechange_trumpdiff_graph,
+     file = 'data-products/votechange_trumpdiff_graph.rda')
+
+#plotly::ggplotly(votechange_trumpdiff_graph, tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
+
+votechange_trumpdiff %>% 
+  group_by(party) %>% 
+  nest() %>% 
+  mutate(fit = map(data, ~lm(votechange_prop ~ prez_diff,
+                             data = .))) %>% 
+  unnest(fit %>% map(broom::tidy)) %>% 
+  View()
+
+#' There does not appear to be a relationship here
