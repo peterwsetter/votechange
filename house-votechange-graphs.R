@@ -32,6 +32,7 @@ EXCLUDE_DISTRICTS <- c('WI-3', 'TX-34')
 library(dplyr)
 library(ggplot2)
 library(tidyr)
+library(purrr)
 library(slickR)
 
 # Custom functions
@@ -202,3 +203,35 @@ save(votechange_trumpscore_graph,
 
 #plotly::ggplotly(votechange_trumpscore_graph, tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
 
+vc_ts %>% 
+  ggplot(aes(trump_plus_minus, votechange_prop)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  theme_bw() +
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(~party) +
+  labs(title = 'Trump +/- Had Nonproportional Impact on Change in Votes Cast',
+       x = 'Trump +/-',
+       y = 'Change in House Votes Cast') ->
+  trump_score_model_graph
+
+save(trump_score_model_graph, file = 'data-products/trump_score_model_graph.rda')
+
+vc_ts %>% 
+  group_by(party) %>% 
+  nest() %>% 
+  mutate(fit = map(data, ~lm(votechange_prop ~ trump_plus_minus,
+                             data = .))) %>% 
+  unnest(fit %>% map(broom::tidy)) %>% 
+  select(party, term, estimate) %>% 
+  spread(key = term, value = estimate) %>% 
+  mutate(
+    # Expected prop if Trump +/- = 0
+    baseline = `(Intercept)`*100, 
+    # Change in prop with change in Trump +/-
+    trump_change = trump_plus_minus*100 
+         ) %>% 
+  select(party, baseline, trump_change) ->
+  trump_score_model
+
+save(trump_score_model, file = 'data-products/trump_score_model.rda')  
