@@ -11,7 +11,35 @@ library(flexdashboard)
 
 ### Intro
 
-Here, I will introduce the dashboard.
+Out of the unclear United States 2018 election results, came two main narratives: it was a "split-chamber decision" and it was a "Blue Wave" buffered by geography. Though there were disappointing loses in Florida and Georgia, Kyrsten Sinema's victory in the Arizona senate election and the overwelming Democratic victory in the races for California's house delegation suggested that the sentiment of the country is squarely behind Democrats, and they are in a good position for the 2020 elections.
+
+To try to understand the results, I examined the proportion of votes cast for house candidates of each party, comparing 2018 with 2016. Typically, voter participation is significantly lower during midterm elections like 2018. If this trend held true, the proportions would be signficiantly less than 100%, and it would suggest that the Democratic victory may be short-lived as a presidential-year electorate may simply replicate the 2016 results. If this was an atypical midterm year with vote proportions near 100%, it may indicate a path for Democrats to take the White House.
+
+If the midterms are a response to the president, can this be quantified? I examined two metrics: Trump +/- and the difference in GOP votes for the President and House in the last election. FiveThirtyEight's ["Trump Score"](https://projects.fivethirtyeight.com/congress-trump-score/house/) attempts to quantify how often a Congress member votes with President Trump. Trump +/- compares the Trump Score with an expected score based on how the district or state voted in the 2016 election. A positive Trump +/- indicates a representative votes with President Trump more often than expectd by their district's president vote in 2016. If this motivated Democratic voters, one would expected to see a positive relationship between Trump +/- and the relative number of votes cast between 2018 and 2016. The second metric attempts to look for split-ticket voters. For example, did moderates vote for Secretary Clinton and a GOP House member in 2016, but then voted for the Democratic House candidate in 2018? 
+
+For this analysis, I examined a subset of states that will likely decide the election in 2020.
+
+The ["Northern Path"](https://fivethirtyeight.com/features/the-2018-map-looked-a-lot-like-2012-and-that-got-me-thinking-about-2020/))
+  + Michigan
+  + Pennsylvania
+  + Wisconsin
+
+The "Sunbelt Strategy"
+  + Arizona
+  + Florida
+  + Georgia
+  + North Carolina
+  + Texas
+
+Potential Battlegrounds
+  + Iowa
+  + New Hampshire
+
+Firmly Won
+  + Indiana
+  + Minnesota
+
+Election results where obtained from the [MIT Elections Science and Data Lab](https://electionlab.mit.edu/). The 2016 results are in their [`elections` R package](https://github.com/MEDSL/elections), and the 2018 Indiana and Pennsylvania results from their [2018-elections Github repo](https://github.com/MEDSL/2018-elections). Due to issues with the raw files, other 2018 data was obtained from OpenSecrets and CNN.
 
 ### Change in Votes Cast for Each Party: State-Level
 
