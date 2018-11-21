@@ -1,0 +1,108 @@
+---
+title: "Democrats Won the House with 2016-like Vote Totals"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+### Intro
+
+Here, I will introduce the dashboard.
+
+### Change in Votes Cast for Each Party: State-Level
+
+```{r}
+load('data-products/votechange_state_graph.rda')
+
+votechange_state_graph
+```
+
+***
+
+Some commentary.
+
+### Change in Votes Cast for Each Party: District-Level
+
+```{r}
+load('data-products/state_votechange_slideshow.rda')
+
+slickR::slickR(state_votechange_slideshow)
+```
+
+*** 
+
+Some more commentary.
+
+### Trump +/- vs. Change in Vote Totals
+
+```{r}
+load('data-products/votechange_trumpscore_graph.rda')
+
+plotly::ggplotly(votechange_trumpscore_graph, 
+                 tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
+```
+
+***
+
+Note the trend.
+
+### Trump +/- Explains the Trend
+
+```{r}
+load('data-products/trump_score_model_graph.rda')
+
+trump_score_model_graph
+```
+
+***
+
+```{r}
+load('data-products/trump_score_model.rda')
+
+trump_score_model %>%
+  filter(party == 'D') %>% 
+  pull(baseline) %>%
+  round() %>% 
+  paste0('%') ->
+  d_baseline
+
+trump_score_model %>%
+  filter(party == 'R') %>% 
+  pull(baseline) %>%
+  round() %>% 
+  paste0('%') ->
+  r_baseline
+
+trump_score_model %>%
+  filter(party == 'D') %>% 
+  pull(trump_change) %>%
+  round() %>% 
+  paste0('%') ->
+  d_trump_effect
+
+trump_score_model %>%
+  filter(party == 'R') %>% 
+  pull(trump_change) %>%
+  round() %>% 
+  paste0('%') ->
+  r_trump_effect
+```
+
+### Difference Between 2016 GOP House and Presidental Votes Does Not 
+
+```{r}
+load('data-products/votechange_trumpdiff_graph.rda')
+
+plotly::ggplotly(votechange_trumpdiff_graph, 
+                 tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
+```
+
+***
+
+Doesn't look like a trend.
+
+### Conclusion
