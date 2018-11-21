@@ -1,52 +1,44 @@
----
-title: "How the House Vote Changed from 2016 to 2018, And What That Might Mean for Trump in 2020"
-output: html_document
-params: 
-  output_dir: "../peterwsetter.github.io/"
----
+#' Copyright Peter W Setter 2018
+#' Create data products of the House Vote Change
+#' Input:
+#' - house_district_2018.rda
+#' - trump_scores_hosue.rda
+#' - elections package
+#' Output:
+#' - votechange_state_graph.rda
+#' - votechange_state_slideshow.rda
+#' - votechange_trumpscore_graph.rda
+#' - votechange_trumpdiff_graph.rda 
 
-*Last Updated: November 18, 2018*
-
-The results from the United States 2018 election allowed both political parties to claim victory. Even with the results in Florida and Arizona up in the air, the Republicians are set to pick up seats in the Senate, while the Demoracts have secured a majority in the House. Was this election a split-chamber decision?
-
-Micah Cohen of FiveThirtyEight, amongst others, has suggested that the House popular vote should be used as the sentiment of the country. Since voter registration and turnout varies so greatly, I'm not sure this is the right metric, but even if it is, the Electral College overrides the popular vote. For those interested in the strategy of the 2020 election, it's important to determine where and why the vote changed. Was it a change in sentiment in the country or a Trumpless ticket? 
-
-Nate Silver started to address this question in an article on [November 8](https://fivethirtyeight.com/features/the-2018-map-looked-a-lot-like-2012-and-that-got-me-thinking-about-2020/) by using the 2018 House vote for the 2020 Electral College. I wanted to take the next step and analyze changes in vote totals in several key swing states.
-
-For each congressional district, how did the total votes for each party change? Were the relative changes in Democratic and Republician votes similar or were they different? For those districts where the shift wasn't proprotional, could we attribute it to Trump? Does the difference in vote proportion between Trump and the 2016 candidate correlate with the 2018 difference? Does Trump score?
-
-Election results where obtained from [MIT Elections Science and Data Lab](https://electionlab.mit.edu/). The 2016 results are in their [`elections` R package](https://github.com/MEDSL/elections)[^1], and 2018 from their [2018-elections Github repo](https://github.com/MEDSL/2018-elections). The 2018 results are in raw format, scrapped from elections website, and needed to be processed before analysis. This is documented in the [Github Repo](https://github.com/peterwsetter/votechange/blob/master/process-2018.R) for this project. The [Trump Scores](https://projects.fivethirtyeight.com/congress-trump-score/house/) were [scrapped](https://github.com/peterwsetter/votechange/blob/master/get-data.R) from FiveThirtyEight.
-
-This analysis will start with Indiana, Minnesota, and Pennsylvania. As results are available, I will expand the analysis to Arizonia, Iowa, Florida, Michigan, New Hampshire, North Carolina, Ohio, Texas, and Wisconsin. 
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-
+## Setup
 load('../elections/data/house_precincts_2016.rda')
 load('../elections/data/presidential_precincts_2016.rda')
 load('data/house_district_2018.rda')
 load('data/trump_scores_house.rda')
 
+# States to include in the analysis
 CURRENT_STATES <- c('Minnesota', 'Indiana', 'Pennsylvania',
                     'Iowa', 'Michigan', 'North Carolina',
                     'Ohio', 'Arizona',
                     'Florida', 'Texas', 'Virginia',
                     'New Hampshire', 'Wisconsin')
 
+# Exclude these districts
+# Lacked candidates from both parties in 2016
+#   --> change in vote extreme outliers
 EXCLUDE_DISTRICTS <- c('WI-3', 'TX-34')
-```
 
-```{r}
-# Load packages
+# Libraries
 library(dplyr)
 library(ggplot2)
 library(tidyr)
+library(purrr)
 library(slickR)
 
+# Custom functions
 `%~%` <- function(lhs, rhs) grepl(rhs, lhs)
 
 `%!in%` <- function(x,y)!(`%in%`(x,y))
-
 
 votechange_chart <- list(
   geom_col(position = 'dodge'),
@@ -55,7 +47,7 @@ votechange_chart <- list(
             #source: https://stackoverflow.com/a/40250493
             position = position_dodge(width = .9),
             color = 'white'
-            ),
+  ),
   scale_fill_manual(values = c('#0015BC', '#FF0000'),
                     name = 'Party'),
   theme_classic(),
@@ -63,13 +55,15 @@ votechange_chart <- list(
   scale_y_continuous(labels = scales::percent_format()),
   coord_flip()
 )
-```
 
+#####
 ## Compare the Total Votes for Each Party
+#' The 2016 House results from `election` are listed by precincts. 
+#' This data was aggregated for candidate totals in the district. 
+#' One flaw in this dataset is that Minnesota's Democractic-Farm-Labor party 
+#' isn't labeled as "democratic". Before summarizing, party labels will be 
+#' adjusted to include the DFL. 
 
-The 2016 House results from `election` are listed by predincts. This data was aggregated for candidate totals in the district. One flaw in this dataset is that Minnesota's Democractic-Farm-Labor party isn't labeled as "democratic". Before summarizing, party labels will be adjusted to include the DFL. 
-
-```{r house_district_2018}
 house_precincts_2016 %>% 
   filter(year == 2016,
          office == 'US House') %>% 
@@ -78,7 +72,7 @@ house_precincts_2016 %>%
                            party %~% '^[R,r]' ~ 'R',
                            TRUE ~ 'O'),
          candidate = candidate_normalized
-         ) %>% 
+  ) %>% 
   group_by(year, state, district, candidate, party) %>% 
   summarize(candidate_votes = sum(votes)) %>% 
   group_by(year, state, district, party) %>% 
@@ -86,12 +80,6 @@ house_precincts_2016 %>%
   ungroup() ->
   house_district_2016
 
-
-```
-
-After a union of the 2016 and 2018 results, the votes are aggregated at the state level. To compare the number of votes cast, I calculated the proportion of votes cast for each party in 2018 compared to 2016.
-
-```{r house_votechange}
 state_abbrevs <- data_frame(
   state = state.name,
   state_abbrev = state.abb
@@ -126,16 +114,14 @@ house_district %>%
 save(votechange_state_graph,
      file = 'data-products/votechange_state_graph.rda')
 
-votechange_state_graph
-```
+#votechange_state_graph
 
-Compared to 2016, there was approximately 20% fewer votes cast in Indiana for candidates of either major party. This is in sharp contrast to Minnesota and Pennsylvania, where Democratic candidates received approximately the **same** number of total votes while there was a sharp decline in votes cast for Republican candidates. 
+# Create slideshow with the change at the district level
 
-```{r}
 house_district %>% 
-  group_by(state, state_district, party, year) %>% 
+  group_by(state, district, state_district, party, year) %>% 
   summarize(party_votes = sum(candidate_votes)) %>% 
-  group_by(state, state_district, party) %>% 
+  group_by(state, district, state_district, party) %>% 
   filter(n() == 2) %>% 
   arrange(year, .by_group = TRUE) %>% 
   summarize(votechange_prop = round(last(party_votes)/first(party_votes), 2)) ->
@@ -147,34 +133,33 @@ district_votechange %>%
          state_district %!in% EXCLUDE_DISTRICTS) %>% 
   group_by(state_district) %>% 
   filter(n() == 2) %>% 
-  mutate(label_text = paste0(round(votechange_prop*100), '%')) %>% 
+  mutate(label_text = paste0(round(votechange_prop*100), '%'),
+         district = as.integer(district)) %>% 
   group_by(state) %>% 
   nest() %>% 
   mutate(graphs = purrr::map2(state, data,
-                              ~ggplot(.y, aes(state_district,
+                              ~ggplot(.y, aes(factor(district),
                                               votechange_prop, 
-                                             fill = party)) +
+                                              fill = party)) +
                                 votechange_chart +
                                 labs(title = .x,
                                      x = NULL,
                                      y = 'Percent of 2016 House Votes Cast for Party')
-                                      ) 
-                   ) %>% 
+  ) 
+  ) %>% 
   pull(graphs) %>% 
-  purrr::map(function(x) svglite::xmlSVG(show(x), standalone = TRUE)) %>% 
-  sapply(function(sv) paste0('data:image/svg+xml;utf8,', as.character(sv))) ->
+  purrr::map(function(gr) svglite::xmlSVG(show(gr), standalone = TRUE)) %>% 
+  purrr::map_chr(function(sv) paste0('data:image/svg+xml;utf8,', as.character(sv))) ->
   state_votechange_slideshow
 
 save(state_votechange_slideshow, 
      file = 'data-products/state_votechange_slideshow.rda')
 
-#slickR::slickR(state_votechange_plots)
+#slickR::slickR(state_votechange_slideshow)
 
-```
 
-Summarizing by state:
-
-```{r votechange_trumpscore}
+#####
+## Compare to Trump Score
 district_votechange %>% 
   filter(party != 'O',
          state != 'Pennsylvania') %>% 
@@ -184,60 +169,89 @@ district_votechange %>%
   inner_join(trump_scores_house,
              by = c('state_district' = 'district')) ->
   vc_ts
-```
 
-```{r vc_ts_graphs}
+# Lines for visualization
 vc_ts %>% 
   group_by(state_district, trump_plus_minus) %>% 
   summarize(upper = max(votechange_prop),
             lower = min(votechange_prop)) %>% 
   mutate(party = 'R') %>% 
   select(-trump_plus_minus) ->
-  diff_line
+  diff_line_ts
 
+# Create interactive graph
 vc_ts %>% 
-  left_join(diff_line,
+  left_join(diff_line_ts,
             by = c('state_district' = 'state_district',
-                  'party' = 'party'))  %>% 
+                   'party' = 'party'))  %>% 
   ggplot(aes(trump_plus_minus, votechange_prop, color = party,
              text = state_district), inherit.aes = FALSE) +
   geom_linerange(aes(ymin = lower, ymax = upper), 
                  color = 'gray', alpha = 0.5) +
   geom_point() +
   scale_color_manual(values = c('#0015BC', '#FF0000'),
-                    name = 'Party') +
+                     name = 'Party') +
   scale_y_continuous(labels = scales::percent_format()) +
   theme_classic() +
   labs(lab = 'Change in House Votes Cast vs 538 Trump +/-',
        x = 'Trump +/-',
        y = 'Change in House Votes Cast') ->
-    votechange_trumpscore_graph
+  votechange_trumpscore_graph
 
 save(votechange_trumpscore_graph,
      file = 'data-products/votechange_trumpscore_graph.rda')
-  
-#plotly::ggplotly(votechange_trumpscore_graph, 
-#                 tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
-  
-```
 
-## Compare Change in House Votes Cast to Difference Between Republician House and Presidential in 2016
+#plotly::ggplotly(votechange_trumpscore_graph, tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
 
-```{r precinct_district_lookup}
+vc_ts %>% 
+  ggplot(aes(trump_plus_minus, votechange_prop)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  theme_bw() +
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(~party) +
+  labs(title = 'Trump +/- Had Nonproportional Impact on\nChange in Votes Cast',
+       x = 'Trump +/-',
+       y = 'Change in House Votes Cast') ->
+  trump_score_model_graph
+
+save(trump_score_model_graph, file = 'data-products/trump_score_model_graph.rda')
+
+vc_ts %>% 
+  group_by(party) %>% 
+  nest() %>% 
+  mutate(fit = map(data, ~lm(votechange_prop ~ trump_plus_minus,
+                             data = .))) %>% 
+  unnest(fit %>% map(broom::tidy)) %>%
+  select(party, term, estimate) %>% 
+  spread(key = term, value = estimate) %>% 
+  mutate(
+    # Expected prop if Trump +/- = 0
+    baseline = `(Intercept)`*100, 
+    # Change in prop with change in Trump +/-
+    trump_change = trump_plus_minus*100 
+         ) %>% 
+  select(party, baseline, trump_change) ->
+  trump_score_model
+
+save(trump_score_model, file = 'data-products/trump_score_model.rda')  
+
+#####
+## Compare Change in House Votes Cast to Difference 
+##   Between Republician House and Presidential in 2016
+
 house_precincts_2016 %>% 
   filter(office == 'US House') %>% 
   distinct(state_postal, district, county_name) ->
   county_district_lookup
-```
 
-```{r}
 presidential_precincts_2016 %>% 
   filter(office == 'US President',
          candidate_normalized == 'trump') %>% 
   select(state_postal, county_name, votes) %>% 
   left_join(county_district_lookup,
-             by = c('state_postal' = 'state_postal',
-                    'county_name' = 'county_name')) %>% 
+            by = c('state_postal' = 'state_postal',
+                   'county_name' = 'county_name')) %>% 
   mutate(state_district = paste0(state_postal, '-', district)) %>% 
   group_by(state_district) %>% 
   summarize(prez_votes = sum(votes)) ->
@@ -258,37 +272,58 @@ trump_district_2016 %>%
   mutate(prez_diff = (house_votes - prez_votes)/prez_votes) %>%
   select(prez_diff, state_district) ->
   house_trump_diff
-```
 
-```{r}
 vc_ts %>% 
   # Exclude Texas and Arizona because of error in election dataset
   filter(state %!in% c('Texas', 'Arizona')) %>% 
-  left_join(diff_line,
+  left_join(diff_line_ts,
             by = c('state_district' = 'state_district',
-                  'party' = 'party'))  %>% 
+                   'party' = 'party'))  %>% 
   left_join(house_trump_diff,
-            by = c('state_district' = 'state_district')) %>% 
+            by = c('state_district' = 'state_district')) ->
+  votechange_trumpdiff
+
+votechange_trumpdiff %>% 
   ggplot(aes(prez_diff, votechange_prop, color = party,
              text = state_district), inherit.aes = FALSE) +
   geom_point() +
   scale_color_manual(values = c('#0015BC', '#FF0000'),
-                    name = 'Party') +
+                     name = 'Party') +
   geom_linerange(aes(ymin = lower, ymax = upper), color = 'gray') +
   scale_x_continuous(labels = scales::percent_format()) +
   scale_y_continuous(labels = scales::percent_format()) +
   theme_classic() +
-  labs(lab = 'Change in House Votes Cast vs Difference Between House and Presidential Votes',
+  labs(lab = 'Change in House Votes Cast vs Difference Between\nHouse and Presidential Votes',
        x = 'Percent Difference Between GOP House and Presidential Votes',
        y = 'Change in House Votes Cast') ->
-    votechange_trumpdiff_graph
+  votechange_trumpdiff_graph
 
 save(votechange_trumpdiff_graph,
      file = 'data-products/votechange_trumpdiff_graph.rda')
-  
-#plotly::ggplotly(votechange_trumpdiff_graph, 
-#                 tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
-  
-```
 
-[^1:] I had difficulty installing `elections` on my AWS Ubuntu server. The repo itself contains the data as `.rds` files, so `git clone`ing locally was a quick workaround.
+#plotly::ggplotly(votechange_trumpdiff_graph, tooltip = c('text', 'trump_plus_minus', 'votechange_prop'))
+
+votechange_trumpdiff %>% 
+  ggplot(aes(prez_diff, votechange_prop)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  theme_bw() +
+  scale_y_continuous(labels = scales::percent_format()) +
+  facet_wrap(~party) +
+  labs(title = 'Change in Votes Cast Was Not Related to \nDifference with Presidential',
+       x = 'Percent Difference Between GOP House and Presidential Votes',
+       y = 'Change in House Votes Cast') ->
+  trump_diff_model_graph
+
+save(trump_diff_model_graph, file = 'data-products/trump_diff_model_graph.rda')
+
+
+votechange_trumpdiff %>% 
+  group_by(party) %>% 
+  nest() %>% 
+  mutate(fit = map(data, ~lm(votechange_prop ~ prez_diff,
+                             data = .))) %>% 
+  unnest(fit %>% map(broom::tidy)) %>% 
+  View()
+
+#' There does not appear to be a relationship here
