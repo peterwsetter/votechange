@@ -76,6 +76,8 @@ AZ-2 flipped with Democrats exceeding their 2016 vote total by 18%. In MI-8, Dem
 
 Interestingly, an outlier district where Democrat vote proportion was down, IN-9, may have flipped if their vote total was closer to 2016.  Similarly, the GOP flipped MN-8 where the vote proporation for Democrats was 79% compared to 90% for Republicans as well was MN-2 where it was 86% Democrats, 88% GOP.
 
+Pennsylvania was excluded because of the redistricting between the elections.
+
 ### Trump +/- vs. Change in Vote Totals
 
 ```{r}
@@ -87,9 +89,9 @@ plotly::ggplotly(votechange_trumpscore_graph,
 
 ***
 
-Note the trend.
+In this graph, the House vote total proportion for each party is plotted against Trump +/-, the representative's Trump-aligned voting relative to what it would be expected to be based on President Trump's performance in that district in 2016. Though highly variable, there appears to be a positively correlated trend between Trump +/- and Democratic vote total proportion. There also appears to be a weaker negatively correlated trend with Republican vote total proportion, though it may be noise.
 
-### Trump +/- Explains the Trend
+### Modeling the Trump +/- Trend
 
 ```{r}
 load('data-products/trump_score_model_graph.rda')
@@ -117,19 +119,19 @@ trump_score_model %>%
   r_baseline
 
 trump_score_model %>%
-  filter(party == 'D') %>% 
-  pull(trump_change) %>%
-  round() %>% 
-  paste0('%') ->
-  d_trump_effect
-
-trump_score_model %>%
-  filter(party == 'R') %>% 
-  pull(trump_change) %>%
-  round() %>% 
-  paste0('%') ->
-  r_trump_effect
+  select(party, trump_change) %>% 
+  spread(key = party, value = trump_change) %>% 
+  mutate(relative = round(abs(D)/abs(R))) %>% 
+  pull(relative) ->
+  relative_effect
+  
 ```
+
+I performed a simple linear regression, using Trump +/- as the predictor variable and vote total proportion as the dependent variable. A separate model was made for each party since we observed, and one would expect, opposite relationships.
+
+The results of this regression support the claim that Democrats won because of greater voter enthuasism. Assuming the incumbant House member voted with President Trump exactly as one would expect based on the President's performance in 2016, Democratic vote total was `r d_baseline` compared to `r r_baseline` for Republican candidates.
+
+Similarly, Trump +/- is nonportionally correlated with vote total proportion. Comparing the models, Trump +/- has a `r realative_effect` times greater effect on Democratic vote total proportion compared to Republician.
 
 ### Difference Between 2016 GOP House and Presidental Votes Does Not 
 
