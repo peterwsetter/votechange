@@ -193,7 +193,7 @@ vc_ts %>%
                      name = 'Party') +
   scale_y_continuous(labels = scales::percent_format()) +
   theme_classic() +
-  labs(lab = 'Change in House Votes Cast vs 538 Trump +/-',
+  labs(lab = 'House Vote Total 2018 Relative to 2016 vs 538 Trump +/-',
        x = 'Trump +/-',
        y = 'House Vote Total 2018/2016') ->
   votechange_trumpscore_graph

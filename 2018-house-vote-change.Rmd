@@ -7,15 +7,17 @@ output:
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
+library(dplyr)
+library(tidyr)
 ```
 
 ### Introduction
 
-Two main narratives came out of the 2018 United States election results: it was a "split-chamber decision" and it was a "Blue Wave" buffered by geography and gerrymandering. Though there were disappointing loses in Florida and Georgia, Kyrsten Sinema's victory in the Arizona senate election and the overwelming Democratic victory in the races for California's house delegation suggested that the sentiment of the country is squarely behind Democrats, and they are in a good position for the 2020 elections.
+Two main narratives came out of the 2018 United States election results: it was a "split-chamber decision" and it was a "Blue Wave" buffered by geography and gerrymandering. Though there were disappointing loses in Florida and Georgia, Kyrsten Sinema's victory in the Arizona senate election and the overwelming Democratic victory in the races for California's house delegation suggested that the sentiment of the country is squarely behind Democrats, putting them in a good position for the 2020 election.
 
-To try to understand the results, I compared the number of votes received by House candidates in each election. Typically, voter participation is significantly lower during midterm elections like 2018. If this trend held true, the proportion of votes received in 2018 relative to 2016 would be signficiantly less than 100%. This would suggest that the Democratic victory may be short-lived as a presidential-year electorate may simply replicate the 2016 results. If this was an atypical midterm year with vote proportions near 100%, it may indicate a path for Democrats to take the White House.
+To try to understand the results, I compared the number of votes received by House candidates in 2018 and 2016. Typically, voter participation is significantly lower during midterm elections like 2018. If this trend held true, the proportion of votes received in 2018 relative to 2016 would be signficiantly less than 100%. This would suggest that the Democratic victory may be short-lived as a presidential-year electorate may simply replicate the 2016 results. If this was an atypical midterm year with vote proportions near 100%, it may indicate a path for Democrats to take the White House.
 
-If the midterms are a response to the president, can this be quantified? I examined two metrics: Trump +/- and the difference in votes for the GOP Presidential and House candidates in the last election. FiveThirtyEight's ["Trump Score"](https://projects.fivethirtyeight.com/congress-trump-score/house/) attempts to quantify how often a Congress member votes with President Trump. Trump +/- compares the Trump Score with an expected score based on how the district or state voted in the 2016 election. A positive Trump +/- indicates a representative votes with President Trump more often than expectd by their district's presidential vote in 2016. If this motivated Democratic voters, one would expect to see a positive relationship between Trump +/- and the relative number of votes cast in 2018 and 2016. The second metric attempts to look for split-ticket voters. For example, did moderates vote for Secretary Clinton and a GOP House member in 2016, but then voted for the Democratic House candidate in 2018? 
+If the midterms are a response to the president, can this be quantified? I examined two metrics: Trump +/- and the difference in votes for the GOP Presidential and House candidates in the last election. FiveThirtyEight's ["Trump Score"](https://projects.fivethirtyeight.com/congress-trump-score/house/) attempts to quantify how often a Congress member votes with President Trump. Trump +/- compares the Trump Score with an expected score based on how the district or state voted in the 2016 election. A positive Trump +/- indicates a representative votes with President Trump more often than expectd by their district's presidential vote in 2016. If this motivated Democratic voters, one would expect to see a positive relationship between Trump +/- and the relative number of votes cast in 2018 and 2016. The second metric attempts to look for split-ticket voters. For example, did moderates vote for Secretary Clinton and a GOP House candidate in 2016, but then voted for the Democratic House candidate in 2018? 
 
 For this analysis, I examined a subset of states that will likely decide the election in 2020.
 
@@ -56,11 +58,11 @@ votechange_state_graph
 
 ***
 
-Democratic House candidates received as many or more votes in eight of the thirteen states analyzed, including all three of the Northern Path states that tipped the 2016 election to now-President Trump. These results support the claim that Democratic voters were more enthuastic compared to Republician voters. Interestingly, this was not true in the two states with Democratic disappointments: Florida (Govenor and Senate, though two House seats were flipped) and Indiana (Senate). 
+Democratic House candidates received as many or more votes in 2018 compared to 2016 in eight of the thirteen states analyzed, including all three of the Northern Path states that tipped the 2016 election to now-President Trump. These results support the claim that Democratic voters were more enthuastic compared to Republician voters. Interestingly, this was not true in the two states with Democratic disappointments: Florida (Govenor and Senate, though two House seats were flipped) and Indiana (Senate). 
 
 In looking forward to 2020, the brightest spot is Arizona. For the other states, one could argue that Democratics won because Trump-inspired voters did not show-up. By exceeding their 2016 vote total by over 10%, Democratic House candidates in Arizona showed the state may be up for grabs in the next election.
 
-While there were similar vote proportions in Texas, the results may be complicated by Senator Ted Cruz's approval rating. Senator Cruz is very unpopular, so one might expect him to under-perform compared to President Trump. Looking at to polling by the University of Texas from October 2018, [Senator Cruz](https://texaspolitics.utexas.edu/set/ted-cruz-favorability-trend) had a 47% Approve - 42% Disapprove split compared to a 48%-45% split for [President Trump](https://texaspolitics.utexas.edu/set/ted-cruz-favorability-trend). If President Trump has a similar approval rating in 2020, it may be cause for concern. Looking deeper into the state -- like the article written by [Kirk Goldsberry](https://fivethirtyeight.com/features/how-beto-orourke-shifted-the-map-in-texas/) -- shows that Texas may be rapidly shifting towards Democrats. Adding new voters -- of which there are many to draw from in Texas -- could make Texas competitive in 2020.
+While there were similar vote proportions in Texas, the results may be complicated by Senator Ted Cruz's approval rating. Senator Cruz is very unpopular, so one might expect him to under-perform compared to President Trump. Looking at polling by the University of Texas from October 2018, [Senator Cruz](https://texaspolitics.utexas.edu/set/ted-cruz-favorability-trend) had a 47% Approve - 42% Disapprove split compared to a 48%-45% split for [President Trump](https://texaspolitics.utexas.edu/set/ted-cruz-favorability-trend). If President Trump has a similar approval rating in 2020, he may have cause for concern. Looking deeper into the state -- like the article written by [Kirk Goldsberry](https://fivethirtyeight.com/features/how-beto-orourke-shifted-the-map-in-texas/) -- shows that Texas may be rapidly shifting towards Democrats. Adding new voters -- of which there are many to draw from in Texas -- could make Texas competitive in 2020.
 
 ### Flipped Districts Also Followed This Trend
 
@@ -74,7 +76,7 @@ slickR::slickR(state_votechange_slideshow)
 
 AZ-2 flipped with Democrats exceeding their 2016 vote total by 18%. In MI-8, Democrats exceeded by 20%, in MI-11 by 19%, MN-3 by 20%. Democrats won the house by matching or exceeding their vote totals in 2016.
 
-Interestingly, an outlier district where Democrat vote proportion was down, IN-9, may have flipped if their vote total was closer to that of 2016.  Similarly, the GOP flipped MN-8 where the vote proporation for Democrats was 79% compared to 90% for Republicans as well was MN-2 where it was 86% Democrats, 88% GOP.
+Interestingly, an outlier district where Democrat vote proportion was down, IN-9, may have flipped if their vote total was closer to that of 2016.  Similarly, the GOP flipped MN-8 where the vote proporation for Democrats was 79% compared to 90% for Republicans as well as MN-2 where it was 86% Democrats, 88% GOP.
 
 Pennsylvania was excluded because of the redistricting between the elections.
 
@@ -131,7 +133,7 @@ trump_score_model %>%
 
 The results of the regression further support the claim that Democrats won because of greater voter enthuasism. Assuming the incumbant House member voted with President Trump exactly as one would expect based on the President's performance in 2016, Democratic vote total was `r d_baseline` compared to `r r_baseline` for Republican candidates.
 
-Similarly, Trump +/- is nonportionally correlated with vote total proportion. Comparing the models, Trump +/- has a `r realative_effect` times greater effect on Democratic vote total proportion compared to that of Republicians.
+Similarly, Trump +/- is nonportionally correlated with vote total proportion. Comparing the models, Trump +/- has a `r relative_effect` times greater effect on Democratic vote total proportion compared to that of Republicians.
 
 ### Difference Between 2016 GOP House and Presidental Votes
 
