@@ -106,8 +106,8 @@ house_district %>%
   ggplot(aes(state, votechange_prop, 
              fill = party)) +
   votechange_chart +
-  labs(title = 'Change in Votes Cast for House Candidates:\n2018 Relative to 2016',
-       y = 'Percent of 2016 House Votes Cast for Party',
+  labs(title = 'Votes Cast for House Candidates:\n2018 Relative to 2016',
+       y = 'House Vote Total 2018/2016',
        x = NULL) ->
   votechange_state_graph
 
@@ -144,7 +144,7 @@ district_votechange %>%
                                 votechange_chart +
                                 labs(title = .x,
                                      x = NULL,
-                                     y = 'Percent of 2016 House Votes Cast for Party')
+                                     y = 'House Vote Total 2018/2016')
   ) 
   ) %>% 
   pull(graphs) %>% 
@@ -193,9 +193,9 @@ vc_ts %>%
                      name = 'Party') +
   scale_y_continuous(labels = scales::percent_format()) +
   theme_classic() +
-  labs(lab = 'Change in House Votes Cast vs 538 Trump +/-',
+  labs(lab = 'House Vote Total 2018 Relative to 2016 vs 538 Trump +/-',
        x = 'Trump +/-',
-       y = 'Change in House Votes Cast') ->
+       y = 'House Vote Total 2018/2016') ->
   votechange_trumpscore_graph
 
 save(votechange_trumpscore_graph,
@@ -210,9 +210,9 @@ vc_ts %>%
   theme_bw() +
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(~party) +
-  labs(title = 'Trump +/- Had Nonproportional Impact on\nChange in Votes Cast',
+  labs(title = 'Trump +/- Had Nonproportional Impact',
        x = 'Trump +/-',
-       y = 'Change in House Votes Cast') ->
+       y = 'House Vote Total 2018/2016') ->
   trump_score_model_graph
 
 save(trump_score_model_graph, file = 'data-products/trump_score_model_graph.rda')
@@ -293,9 +293,8 @@ votechange_trumpdiff %>%
   scale_x_continuous(labels = scales::percent_format()) +
   scale_y_continuous(labels = scales::percent_format()) +
   theme_classic() +
-  labs(lab = 'Change in House Votes Cast vs Difference Between\nHouse and Presidential Votes',
-       x = 'Percent Difference Between GOP House and Presidential Votes',
-       y = 'Change in House Votes Cast') ->
+  labs(x = 'Percent Difference Between GOP House and Presidential Votes',
+       y = 'House Vote Total 2018/2016') ->
   votechange_trumpdiff_graph
 
 save(votechange_trumpdiff_graph,
@@ -310,9 +309,9 @@ votechange_trumpdiff %>%
   theme_bw() +
   scale_y_continuous(labels = scales::percent_format()) +
   facet_wrap(~party) +
-  labs(title = 'Change in Votes Cast Was Not Related to \nDifference with Presidential',
+  labs(title = 'Votes Cast Was Not Related to \nDifference with Presidential',
        x = 'Percent Difference Between GOP House and Presidential Votes',
-       y = 'Change in House Votes Cast') ->
+       y = 'House Vote Total 2018/2016') ->
   trump_diff_model_graph
 
 save(trump_diff_model_graph, file = 'data-products/trump_diff_model_graph.rda')
