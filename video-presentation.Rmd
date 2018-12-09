@@ -1,0 +1,119 @@
+---
+title: "Democrats Won the House in 2018 with 2016-like Vote Totals"
+author: "Peter W Setter"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(dplyr)
+library(tidyr)
+```
+
+<!-- An analysis of House results from the 2018 Election showed that Democratic candidates typically had vote totals near that of 2016, supporting the argument that the recent election was a Blue Wave. Further, Democratic votes were correlated with the incumbant representative's voting with Trump, relative to the partisanship of the district. -->
+
+## Questions
+
+- Is there evidence of unequal voter turnout between Democrats and Republicans?
+- Quantifying how the election results are a response to President Trump.
+
+<!--This analysis asked to main questions: was there unequal voter turnout between Democrats and Republicians, and was turnout correlated with the local views on President Trump? In an attemp to answer these questions, two metrics were used: the ratio of votes received by House candidates in 2018 relative to 2016, and Five Thirty Eight's Trump Plus Minus.-->
+
+## Vote Proportation
+
+$$\frac{VotesReceived 2018}{Votes Received2016}$$
+
+<!--Typically, voter participation is significantly lower during midterm elections like 2018. If this trend held true, the proportion of votes received in 2018 relative to 2016 would be significantly less than 100%. This would suggest that the Democratic victory may be short-lived as a presidential-year electorate may simply replicate the 2016 results. If this was an atypical midterm year with vote proportions near 100%, it may indicate a path for Democrats to take the White House.-->
+
+## Democrats Matched or Beat Their Vote Totals in 8/13 States
+
+```{r}
+load('data-products/votechange_state_graph.rda')
+
+votechange_state_graph
+```
+
+<!--Democratic House candidates received as many or more votes in 2018 compared to 2016 in eight of the thirteen states analyzed, including Wisconsin, Michigan, and Pennsylvania, the three northern states that tipped the 2016 election to now-President Trump. These results support the claim that Democratic voters were more enthusiastic compared to Republican voters. Interestingly, this was not true in the two states with Democratic disappointments: Florida and Indiana.-->
+
+## Success in Arizona
+
+```{r}
+load('data-products/arizona_texas.rda')
+
+arizona_votechange[[1]]
+```
+
+<!--In looking forward to 2020, the brightest spot is Arizona. For the other states, one could argue that Democrats won because Trump-inspired voters did not show-up. By exceeding their 2016 vote total by over 10%, Democratic House candidates in Arizona showed the state may be up for grabs in the next election.-->
+
+## Can Texas Finally Flip?
+
+```{r}
+texas_votechange[[1]]
+```
+
+<!--While there were similar vote proportions in Texas, the results may be complicated by Senator Ted Cruz's approval rating. Senator Cruz is very unpopular, so one might expect him to under-perform compared to President Trump. Looking at polling by the University of Texas from October 2018, Senator Cruz had a 47% Approve - 42% Disapprove split compared to a 48%-45% split for President Trump. If President Trump has a similar approval rating in 2020, he may have cause for concern. Looking deeper into the state shows that Texas may be rapidly shifting towards Democrats. Adding new voters, of which there are many to draw from in Texas, could make Texas competitive in 2020.-->
+
+## Trump +/-
+
+- Created and tracked by FiveThirtyEight
+- How often representative votes with Trump
+- Partisan lean of district
+
+<!--Trump Plus Minus is a metric created by Five Thirty Eight that quantifies a representative's Trump-aligned voting relative to what it would be expected to be based on President Trump's performance in that district in 2016.-->
+
+## Trump +/- Correlated with 2018/2016 Ratio
+
+```{r}
+load('data-products/votechange_trumpscore_graph.rda')
+
+votechange_trumpscore_graph
+```
+
+<!--In this graph, the House vote total proportion for each party is plotted against Trump Plus Minus. Though highly variable, there appears to be a positive trend between Trump Plus Minus and Democratic vote total proportion. There also appears to be a weaker negative trend with Republican vote total proportion. In order to examine this further a simple linear regression was performed using Trump Plus Minus as the predictor variable and vote total proportion as the dependent variable. A separate model was made for each party since opposite relationships were expected and observed.-->
+
+## Regression Results
+
+```{r}
+load('data-products/trump_score_model.rda')
+
+trump_score_model %>%
+  filter(party == 'D') %>% 
+  pull(baseline) %>%
+  round() %>% 
+  paste0('%') ->
+  d_baseline
+
+trump_score_model %>%
+  filter(party == 'R') %>% 
+  pull(baseline) %>%
+  round() %>% 
+  paste0('%') ->
+  r_baseline
+
+trump_score_model %>%
+  select(party, trump_change) %>% 
+  spread(key = party, value = trump_change) %>% 
+  mutate(relative = round(abs(D)/abs(R))) %>% 
+  pull(relative) ->
+  relative_effect
+  
+```
+Assuming Trump +/- is 0
+
+- Democrats = `r d_baseline`
+- Republicans = `r r_baseline`
+- Relative Effect = `r relative_effect`
+
+<!--The results of the regression further support the claim that Democrats won because of greater voter enthusiasm. Assuming the incumbent House member voted with President Trump exactly as one would expect based on the President's performance in 2016, Democratic vote total was 100% compared to 82% for Republican candidates.
+
+Similarly, Trump Plus Minus is non-proportionally correlated with vote total proportion. Comparing the models, Trump Plus Minus has a four times greater effect on Democratic vote total proportion compared to that of Republicans.-->
+
+## Conclusion
+
+- Wisconsin, Michigan, and Pennsylvania back in play
+- Sunbelt Strategy opening for Democrats
+
+<!--Based on this analysis, Democrats won the House by meeting or exceeding their vote total in 2016. There appears to be an enthusiasm gap between voters of the two parties. Kyrsten Sinema and the House candidates in her state demonstrated that Arizona and the Sunbelt Strategy may be in play. By adding voters, Democrats would have a reasonable opportunity to take Texas as well. 
+
+The relationship of vote total proportion and Trump Plus Minus suggests that voters were motivated by how their representative voted. -->
