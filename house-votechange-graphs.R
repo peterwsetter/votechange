@@ -146,7 +146,25 @@ district_votechange %>%
                                      x = NULL,
                                      y = 'House Vote Total 2018/2016')
   ) 
-  ) %>% 
+  ) ->
+  graph_df
+
+# Arizona
+graph_df %>% 
+  filter(state == 'Arizona') %>% 
+  pull(graphs) ->
+  arizona_votechange
+
+graph_df %>% 
+  filter(state == 'Texas') %>% 
+  pull(graphs) ->
+  texas_votechange
+
+save(arizona_votechange, texas_votechange,
+     file = 'data-products/arizona_texas.rda')
+
+# All graphs for slideshow
+graph_df %>% 
   pull(graphs) %>% 
   purrr::map(function(gr) svglite::xmlSVG(show(gr), standalone = TRUE)) %>% 
   purrr::map_chr(function(sv) paste0('data:image/svg+xml;utf8,', as.character(sv))) ->
