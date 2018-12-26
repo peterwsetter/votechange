@@ -18,7 +18,7 @@ library(tidyr)
 - Is there evidence of unequal voter turnout between Democrats and Republicans?
 - Quantifying how the election results are a response to President Trump.
 
-<!--This analysis asked to main questions: was there unequal voter turnout between Democrats and Republicians, and was turnout correlated with the local views on President Trump? In an attemp to answer these questions, two metrics were used: the ratio of votes received by House candidates in 2018 relative to 2016, and Five Thirty Eight's Trump Plus Minus.-->
+<!--This analysis asked two main questions: was there unequal voter turnout between Democrats and Republicians, and was turnout correlated with the local views on President Trump? In an attempt to answer these questions, two metrics were used: the ratio of votes received by House candidates in 2018 relative to 2016, and Five Thirty Eight's Trump Plus Minus.-->
 
 ## Vote Proportation
 
