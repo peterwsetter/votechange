@@ -6,5 +6,6 @@ library(ari)
 ari_narrate(script = 'video-presentation.Rmd',
             slides = 'video-presentation.html',
             output = 'data-products/democrats-won-with-2016-vote-totals.mp4',
-            voice = 'Matthew'
+            voice = 'Matthew',
+            capture_method = 'iterative'
             )
